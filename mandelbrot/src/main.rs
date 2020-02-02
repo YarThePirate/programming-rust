@@ -1,7 +1,11 @@
 extern crate num;
+extern crate image;
 
 use std::str::FromStr;
 use num::Complex;
+use image::ColorType;
+use image::png::PNGEncoder;
+use std::fs::File;
 
 /// Try to determine if `c` is in the Mandelbrot set, using at most `limit`
 /// iterations to decide.
@@ -130,6 +134,21 @@ fn complex_square_add_loop( c: Complex<f64> ) {
     loop {
         z = z * z + c;
     }
+}
+
+/// Write the buffer `pixels`, whose dimensions are given by `bounds`, to the
+/// file named `filename`.
+fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize))
+    -> Result<(), std::io::Error>
+{
+    let output = File::create(filename)?;
+
+    let encoder = PNGEncoder::new(output);
+    encoder.encode(&pixels,
+                   bounds.0 as u32, bounds.1 as u32,
+                   ColorType::Gray(8))?;
+    
+    Ok(())
 }
 
 fn main() {
