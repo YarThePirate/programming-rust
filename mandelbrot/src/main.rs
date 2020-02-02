@@ -6,6 +6,7 @@ use num::Complex;
 use image::ColorType;
 use image::png::PNGEncoder;
 use std::fs::File;
+use std::io::Write;
 
 /// Try to determine if `c` is in the Mandelbrot set, using at most `limit`
 /// iterations to decide.
@@ -152,5 +153,25 @@ fn write_image(filename: &str, pixels: &[u8], bounds: (usize, usize))
 }
 
 fn main() {
-    println!("Hello, world!");
+    let args: Vec<String> = std::env::args().collect();
+
+    // FAILURE CASE: Incorrect args
+    if args.len() != 5 {
+        writeln!(std::io::stderr(),
+                 "Usage: mandelbrot FILE PIXELS UPPERLEFT BOTTOMRIGHT").unwrap();
+        writeln!(std::io::stderr(),
+                 "Example: {} mandel.png 1000x750 -1.20,0.35 -1,0.20",
+                 args[0]).unwrap();
+        std::process::exit(1);
+    }
+
+    let bounds = parse_pair(&args[2], 'x').expect("Error parsing image dimensions");
+    let upper_left = parse_complex(&args[3]).expect("Error parsing upper left corner");
+    let bottom_right = parse_complex(&args[4]).expect("Error parsing bottom right corner");
+
+    let mut pixels = vec![0; bounds.0 * bounds.1];
+
+    render(&mut pixels, bounds, upper_left, bottom_right);
+
+    write_image(&args[1], &pixels, bounds).expect("Error writing PNG file");
 }
